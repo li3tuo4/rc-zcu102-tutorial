@@ -1,0 +1,198 @@
+\documentclass[a4paper,11pt]{article}
+
+\input{preamble}
+
+\newcommand{\specrev}{\mbox{20181128-{\em draft}}}
+
+\begin{document}
+
+\title{\vspace{-0.7in}\Large {\bf FPGA-ZCU Quick Start Tutorial} \\
+Document Version 1.0c
+  \vspace{-0.1in}}
+
+\author{Tuo Li, Sri Parameswaran\\
+  School of CSE, University of New South Wales \\
+  {\tt tuoli@unsw.edu.au, sri.parameswaran@unsw.edu.au} \\
+  \today
+}
+\date{} 
+
+\newpage
+
+\maketitle
+
+\newpage
+
+\section*{About This Tutorial}
+This document will provide a step-by-step walkthrough with the fpga-zcu (the ZCU102 port of Rocket-chip) project, towards running operating system on rocket-chip System-on-Chip (SoC) on ZCU102 FPGA board. 
+This tutorial assumes using SD card to boot and program the FPGA.
+This tutorial assumes that Vivado 2017.1 and SDK 2018.2 have been installed. 
+\newpage
+
+\section{Getting Started}
+
+\begin{enumerate}
+\item Clone the main repository using git command from github:\\
+ {\tt git clone https://github.com/li3tuo4/fpga-zcu.git}\\
+ Alternatively, you can directly download the zip file from github.
+\item Enter the {\tt fpga-zcu/zcu102} directory and use Makefile to initiate the submodules/sub-repositories:\\
+ {\tt make init-submodules}
+ \item Enter {\tt fpga-zcu/rocket-chip} directory and follow README to install the rocket-chip dependencies (submodules). Make sure riscv-linux-gnu is installed when building compiler. This is required for making riscv-linux.
+\end{enumerate}
+
+\section{Hardware Generation}
+\begin{enumerate}
+\item Enter  {\tt fpga-zcu/zcu102} directory and use Makefile to compile chisel source code:\\
+{\tt make rocket}
+\item Implement and build bitstream using Makefile:\\
+ {\tt make bitstream}
+\item Export the hardware from the vivado workspace (the directory created during synthesis and implementation):\\
+{\tt cp zcu102\_rocketchip\_ZynqConfig.runs/impl\_1/rocketchip\_wrapper.sysdef soft\_config/rocketchip\_wrapper.hdf}\\
+{\tt cp zcu102\_rocketchip\_ZynqConfig.runs/impl\_1/rocketchip\_wrapper.bit soft\_config/rocketchip\_wrapper.bit}\\
+These files are used by software generation.
+\end{enumerate}
+
+\section{Software Generation}
+In this step, we will create the software stacks for ARM and RISC-V. The ARM operating system will run on the host (ARM cores), which calls RISC-V via frontend server (fesvr). Executing frontend server with Berkeley boot loader (bbl), built with RISC-V Linux kernel, on ARM, will boot up RISC-V core to run RISC-V Linux operating system.  
+
+\subsection{ARM}\label{sec-arm}
+
+\begin{enumerate}
+\item Install petalinux, which creates software stacks for ARM. Follow the ``Installation Steps'' on Page 11 in: \url{https://www.xilinx.com/support/documentation/sw_manuals/xilinx2017_1/ug1144-petalinux-tools-reference-guide.pdf}
+
+\item Download board support package (bsp) file of ZCU102 from: \url{https://www.xilinx.com/member/forms/download/xef.html?filename=xilinx-zcu102-v2017.1-final.bsp}. Xilinx account is required, which can be registered straightforwardly. Put  the downloaded file {\tt xilinx-zcu102-v2017.1-final.bsp} into {\tt zcu102/soft\_config} directory.
+
+\item Export {\tt PETALINUX} environment variable and set up petalinux by:\\
+{\tt export PETALINUX=/path/to/petalinux \&\& make pl\_setup}
+
+\item Enter {\tt fpga-zcu/zcu102}. Use Makefile to automatically create and build petalinux project for ARM Linux image:\\
+{\tt make kernel\_image}\\
+Makefile will automatically create a petalinux project named {\tt petalinux\_proj}, in {\tt fpga-zcu/zcu102}.
+The {\tt BOOT.BIN} and {\tt image.ub} in {\tt petalinux\_proj/images/linux} are the image files created. {\tt initramfs.cpio.gz} is the root file system.
+
+\item Copy these three files to {\tt zcu102/fpga-images-zcu102} directory. Note this step will replace the initial image files in this directory. Then, use Makefile to open, modify, and close the root filesystem:\\
+{\tt make rootfs-open}\\
+{\tt make rootfs-close}
+\end{enumerate}
+
+\subsection{RISC-V}
+\begin{enumerate}
+\item Obtain freedom-u-sdk from \url{https://github.com/sifive/freedom-u-sdk} and follow README to set up.
+
+\item Copy the configuration file from {\tt soft\_config} to the work directory of RISC-V Linux and in the work directory of RISC-V Linux execute build:\\
+{\tt cp /path/to/soft\_confg/Linux\_config /path/to/freedom-u-sdk/work/linux/.config}\\
+{\tt ./build}\\
+The kernel image {\tt vmlinux} will be generated this directory.
+
+\item Follow the riscv-tools README to create Berkeley boot loader (bbl) with RISC-V Linux included:
+{\tt cd <riscv-pk>/build\\
+rm -rf *\\
+../configure --prefix=\$RISCV --host=riscv64-unknown-linux-gnu --with-payload=<riscv-linux>/vmlinux\\
+make\\
+make install}
+
+\item Use Makefile to create fesvr-zynq binary for ZCU102:\\
+{\tt make fesvr-zynq}
+
+\item Put {\tt fesvr-zynq, libfesvr.so} and {\tt bbl} into the root filesystem by using the commands in Step 4 in Section~\ref{sec-arm}.
+\end{enumerate}
+
+\section{FPGA Board Setup and SD Card Preparation}
+\begin{enumerate}
+\item Prepare the board following Xilinx quick start guide in \url{https://www.xilinx.com/support/documentation/boards_and_kits/zcu102/xtp426-zcu102-quickstart.pdf} and Chapter 2: Board Setup and Configuration in Xilinx UG1182 in \url{https://www.xilinx.com/support/documentation/boards_and_kits/zcu102/ug1182-zcu102-eval-bd.pdf}. Note Switch SW6 must be configured to ``off, off, off, on'' for allowing SD card boot up.
+\item Prepare SD card following README in the sub-repository {\tt fpga-images-zcu102} in \url{https://github.com/li3tuo4/fpga-images-zcu102}.
+\item Enter {\tt /path/to/zcu102} directory and use Makefile to load SD card:\\
+{\tt make load-sd}\\
+Now it's ready to run the system on FPGA.
+\end{enumerate}
+
+\section{FPGA Emulation}
+Make sure USB cable's driver is installed properly on the host PC. Xilinx UG344 might be helpful: \url{https://www.xilinx.com/support/documentation/user_guides/ug344.pdf}
+\begin{enumerate}
+\item Set up and open minicom or your preferred terminal:
+{\tt minicom -D /dev/ttyUSB0}\\
+Make sure the serial port in minicom is configured to ``115200 8N1'', which means ``speed = 115200, parity bit = none, data bits = 8''.
+
+\item Insert the SD card and power on the FPGA board. The minicom terminal will show the ARM Linux boot up output. By default, ARM Linux's login username and password are both ``root''.
+
+\item After login, execute fesvr with bbl as argument to wake up RISC-V and let it boot up Linux:
+{\tt LD\_LIBRARY\_PATH=./ ./fesvr-zynq bbl}\\
+By default, the login username and password of RISC-V Linux are ``root'' and ``sifive''.
+\end{enumerate}
+
+Hint: If you have ethernet connection, which is already available in the default system build, using SCP to transfer files such as fesvr and bbl directly from Host PC to FPGA after ARM Linux login can save the time in opening, modifying and closing root filesystem.
+
+\section{Possible Build Errors and Solutions}
+\subsection{Error compiling sbt component  `compiler-interface'}
+Example error message after {\tt make rocket}:
+\begin{lstlisting}
+sajid2@sajid2-HP-Compaq-Elite-8300-SFF:~/fpga-zynq/zc706$ make rocket
+mkdir -p /home/sajid2/fpga-zynq/common/build
+cd /home/sajid2/fpga-zynq/common && java -Xmx2G -Xss8M -XX:MaxPermSize=256M -jar /home/sajid2/fpga-zynq/rocket-chip/sbt-launch.jar "run /home/sajid2/fpga-zynq/common/build zynq Top zynq ZynqFPGAConfig"
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=256M; support was removed in 8.0
+[ERROR] Failed to construct terminal; falling back to unsupported
+java.lang.NumberFormatException: For input string: "0x100"
+	at java.lang.NumberFormatException.forInputString(NumberFormatException.java:65)
+.
+.
+.
+.
+.
+
+[info] Resolving org.scala-sbt#interface;0.13.16 ...
+[error] (compile:compileIncremental) Error compiling sbt component 'compiler-interface'
+Project loading failed: (r)etry, (q)uit, (l)ast, or (i)gnore? q
+\end{lstlisting}
+
+Solution (from Sajid):
+\begin{enumerate}
+\item   Build/compile the chisel and verilator according to the instruction given here \url{https://github.com/freechipsproject/chisel3} including {\tt publish\_local} and adding librarydependencies into build.sbt file which locates into rocketchip directory.
+     According to the following instructions:\\
+     \begin{enumerate}
+     \item To publish your version of Chisel to the local Ivy (sbt's dependency manager) repository, run:
+     {\tt sbt publishLocal}
+     \item In order to have your projects use this version of Chisel, you should update the libraryDependencies setting in your project's build.sbt file to:
+     \begin{verbatim}
+libraryDependencies += "edu.berkeley.cs" %% "chisel3" % "3.2-SNAPSHOT"
+     \end{verbatim}
+     \end{enumerate}
+\item Install Java 8.
+\begin{enumerate}
+\item Downladed the java version 8 from \url{https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html}
+\item Extract to the folder
+\item Add the extracted folder bin path into path by 
+\begin{verbatim}export ......../bin  :$PATH
+\end{verbatim}
+Check the java version before adding the path and after adding the path to confirm it. Use command {\tt which java}:
+\begin{lstlisting}
+sajid2@sajid2-HP-Compaq-Elite-8300-SFF:~/rc-fpga-zcu/rocket-chip/riscv-tools$ which java
+/usr/bin/java
+sajid2@sajid2-HP-Compaq-Elite-8300-SFF:~/rc-fpga-zcu/rocket-chip/riscv-tools$ export  PATH=/home/sajid2/jdk-8u191-linux-x64/jdk1.8.0_191/bin:$PATH
+sajid2@sajid2-HP-Compaq-Elite-8300-SFF:~/rc-fpga-zcu/rocket-chip/riscv-tools$ which java
+/home/sajid2/jdk-8u191-linux-x64/jdk1.8.0_191/bin/java
+\end{lstlisting}
+\end{enumerate}
+\item Now make rocket. Finally it is working now and successfully completing
+\end{enumerate}
+
+\subsection{tcmalloc failure during vivado synthesis}
+Error message:
+\begin{lstlisting}
+---------------------------------------------------------------------------------
+Start Technology Mapping
+---------------------------------------------------------------------------------
+src/central_freelist.cc:333] tcmalloc: allocation failed 16384 
+TclStackFree: incorrect freePtr. Call out of sequence?
+[Tue Jan 15 17:23:56 2019] synth_1 finished
+wait_on_run: Time (s): cpu = 00:00:00.33 ; elapsed = 00:20:41 . Memory (MB): peak = 1493.863 ; gain = 0.000 ; free physical = 1893 ; free virtual = 3117
+# launch_runs impl_1 -to_step write_bitstream
+ERROR: [Common 17-70] Application Exception: Failed to launch run 'impl_1' due to failures in the following run(s):
+synth_1
+These failed run(s) need to be reset prior to launching 'impl_1' again.
+\end{lstlisting}
+
+Solution (from Sajid):\\
+It's caused by insufficient memory in the host machine.
+According to \url{https://www.xilinx.com/products/design-tools/vivado/memory.html}, synthesizing for xczu9eg (zcu102) by vivado requires 10 to 14 GB memory.  
+
+\end{document}
