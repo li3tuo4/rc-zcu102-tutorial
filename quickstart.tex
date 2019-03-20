@@ -47,14 +47,11 @@ This tutorial assumes that Vivado 2017.1 and SDK 2018.2 have been installed.
 \item Implement and build bitstream using Makefile:\\
  {\tt make bitstream}
  
-% FIXME : Error occurs due to the wrong path in soft_config/config which cause the failure in building:
-% CONFIG_TMP_DIR_LOCATION="/home/lituo/workspace/riscv/riscv-zcu102/fpga-zynq/zcu102/rocketchip_rev2/build/tmp"
-% Can use relative path instead or modify the Makefile
 
 \item Export the hardware from the vivado workspace (the directory created during synthesis and implementation):\\
-{\tt cp zcu102\_rocketchip\_ZynqConfig.runs/impl\_1/rocketchip\_wrapper.sysdef soft\_config/rocketchip\_wrapper.hdf}\\
-{\tt cp zcu102\_rocketchip\_ZynqConfig.runs/impl\_1/rocketchip\_wrapper.bit soft\_config/rocketchip\_wrapper.bit}\\
-% FIXME : source directory is zcu102/zcu102_rocketchip_ZynqConfig/rocketchip_ZynqConfig.runs/impl_1/...
+{\tt cp zcu102\_rocketchip\_ZynqConfig/zcu102\_rocketchip\_ZynqConfig.runs/impl\_1/rocketchip\_wrapper.sysdef soft\_config/rocketchip\_wrapper.hdf}\\
+{\tt cp zcu102\_rocketchip\_ZynqConfig/zcu102\_rocketchip\_ZynqConfig.runs/impl\_1/rocketchip\_wrapper.bit soft\_config/rocketchip\_wrapper.bit}\\
+
 These files are used by software generation.
 \end{enumerate}
 
@@ -68,8 +65,6 @@ In this step, we will create the software stacks for ARM and RISC-V. The ARM ope
 
 \item Download board support package (bsp) file of ZCU102 from: \url{https://www.xilinx.com/member/forms/download/xef.html?filename=xilinx-zcu102-v2017.1-final.bsp}. Xilinx account is required, which can be registered straightforwardly. Put  the downloaded file {\tt xilinx-zcu102-v2017.1-final.bsp} into {\tt zcu102/soft\_config} directory.
 
-% FIXME : in soft_config/petalinuxbd.sh -> "bsp=$config_dir/xilinx-zcu102-2017.1-final.bsp"
-% the actual bsp file is named as "...-v2017.1-..."
 
 \item Export {\tt PETALINUX} environment variable and set up petalinux by:\\
 {\tt export PETALINUX=/path/to/petalinux \&\& make pl\_setup}
@@ -89,7 +84,7 @@ The {\tt BOOT.BIN} and {\tt image.ub} in {\tt petalinux\_proj/images/linux} are 
 \item Obtain freedom-u-sdk from \url{https://github.com/sifive/freedom-u-sdk} and follow README to set up.
 
 \item Copy the configuration file from {\tt soft\_config} to the work directory of RISC-V Linux and in the work directory of RISC-V Linux execute build:\\
-{\tt cp /path/to/soft\_confg/Linux\_config /path/to/freedom-u-sdk/work/linux/.config}\\
+{\tt cp /path/to/soft\_config/config\_freedom /path/to/freedom-u-sdk/work/linux/.config}\\
 % FIXME : souce file is named "config" instead of "Linux_config"
 {\tt ./build}\\
 % FIXME : in the latest version of freedom SDK, build is extracted into simple Makefile,
