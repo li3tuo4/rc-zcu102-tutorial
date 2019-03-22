@@ -7,7 +7,7 @@
 \begin{document}
 
 \title{\vspace{-0.7in}\Large {\bf FPGA-ZCU Quick Start Tutorial} \\
-Document Version 1.0c
+Document Version 1.0d
   \vspace{-0.1in}}
 
 \author{Tuo Li, Sri Parameswaran\\
@@ -48,10 +48,11 @@ This tutorial assumes that Vivado 2017.1 and SDK 2018.2 have been installed.
  {\tt make bitstream}
  
 
-\item Export the hardware from the vivado workspace (the directory created during synthesis and implementation):\\
-{\tt cp zcu102\_rocketchip\_ZynqConfig/zcu102\_rocketchip\_ZynqConfig.runs/impl\_1/rocketchip\_wrapper.sysdef soft\_config/rocketchip\_wrapper.hdf}\\
-{\tt cp zcu102\_rocketchip\_ZynqConfig/zcu102\_rocketchip\_ZynqConfig.runs/impl\_1/rocketchip\_wrapper.bit soft\_config/rocketchip\_wrapper.bit}\\
-
+\item Export the hardware from the vivado workspace (the directory created during synthesis and implementation):
+\begin{lstlisting}
+cp zcu102_rocketchip_ZynqConfig/zcu102_rocketchip_ZynqConfig.runs/impl_1/rocketchip_wrapper.sysdef soft_config/rocketchip_wrapper.hdf
+cp zcu102_rocketchip_ZynqConfig/zcu102_rocketchip_ZynqConfig.runs/impl_1/rocketchip_wrapper.bit soft_config/rocketchip_wrapper.bit
+\end{lstlisting}
 These files are used by software generation.
 \end{enumerate}
 
@@ -81,26 +82,29 @@ The {\tt BOOT.BIN} and {\tt image.ub} in {\tt petalinux\_proj/images/linux} are 
 
 \subsection{RISC-V}
 \begin{enumerate}
-\item Obtain freedom-u-sdk from \url{https://github.com/sifive/freedom-u-sdk} and follow README to set up.
+\item Obtain freedom-u-sdk from \url{https://github.com/sifive/freedom-u-sdk} and follow README to set up. This tutorial uses {\tt linux\_u500vc707devkit\_confg} branch (commit {\tt db77bd7a8779d776d3f67b8a76ab5973e93604e6}).
 
 \item Copy the configuration file from {\tt soft\_config} to the work directory of RISC-V Linux and in the work directory of RISC-V Linux execute build:\\
 {\tt cp /path/to/soft\_config/config\_freedom /path/to/freedom-u-sdk/work/linux/.config}\\
-% FIXME : souce file is named "config" instead of "Linux_config"
 {\tt ./build}\\
-% FIXME : in the latest version of freedom SDK, build is extracted into simple Makefile,
-% type "make -j4 ARCH=riscv CROSS_COMPILE=riscv64-unknown-linux-gnu- vmlinux" instead.
-The kernel image {\tt vmlinux} will be generated this directory.
 
-\item Follow the riscv-tools README to create Berkeley boot loader (bbl) with RISC-V Linux included:
+In the latest version of freedom SDK, build is extracted into simple Makefile, in this case,
+type:\\ 
+{\tt make -jN ARCH=riscv CROSS\_COMPILE=riscv64-unknown-linux-gnu vmlinux}\\ 
+instead.
+The kernel image {\tt vmlinux} will be generated in this directory.
+
+\item Follow the riscv-tools README to create Berkeley boot loader (bbl) with RISC-V Linux included:\\
 {\tt cd <riscv-pk>/build\\
 rm -rf *\\
 ../configure --prefix=\$RISCV --host=riscv64-unknown-linux-gnu --with-payload=<riscv-linux>/vmlinux\\
 make\\
 make install}
 
-\item Use Makefile to create fesvr-zynq binary for ZCU102:\\
+\item Make sure Xilinx SDK is installed and has been added to the PATH to successfully generate the binary. 
+Use Makefile to create fesvr-zynq binary for ZCU102:\\
 {\tt make fesvr-zynq}
-% FIXME : Make sure Xilinx SDK is installed and has been added to the PATH to successfully generate the binary
+
 
 \item Put {\tt fesvr-zynq, libfesvr.so} and {\tt bbl} into the root filesystem by using the commands in Step 4 in Section~\ref{sec-arm}.
 \end{enumerate}
@@ -152,7 +156,7 @@ java.lang.NumberFormatException: For input string: "0x100"
 Project loading failed: (r)etry, (q)uit, (l)ast, or (i)gnore? q
 \end{lstlisting}
 
-Solution (from Sajid):
+Solution:
 \begin{enumerate}
 \item   Build/compile the chisel and verilator according to the instruction given here \url{https://github.com/freechipsproject/chisel3} including {\tt publish\_local} and adding librarydependencies into build.sbt file which locates into rocketchip directory.
      According to the following instructions:\\
@@ -199,7 +203,7 @@ synth_1
 These failed run(s) need to be reset prior to launching 'impl_1' again.
 \end{lstlisting}
 
-Solution (from Sajid):\\
+Solution:\\
 It's caused by insufficient memory in the host machine.
 According to \url{https://www.xilinx.com/products/design-tools/vivado/memory.html}, synthesizing for xczu9eg (zcu102) by vivado requires 10 to 14 GB memory.  
 
