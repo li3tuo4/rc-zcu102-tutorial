@@ -7,7 +7,7 @@
 \begin{document}
 
 \title{\vspace{-0.7in}\Large {\bf FPGA-ZCU Quick Start Tutorial} \\
-Document Version 1.0d
+Document Version 2.0a
   \vspace{-0.1in}}
 
 \author{Tuo Li, Sri Parameswaran\\
@@ -24,25 +24,28 @@ Document Version 1.0d
 \newpage
 
 \section*{About This Tutorial}
-This document will provide a step-by-step walkthrough with the fpga-zcu (the ZCU102 port of Rocket-chip) project, towards running operating system on rocket-chip System-on-Chip (SoC) on ZCU102 FPGA board. 
+This document will provide a step-by-step walkthrough with the (rc-)fpga-zcu (the ZCU102 port of Rocket-chip) project, towards running operating system on rocket-chip System-on-Chip (SoC) on ZCU102 FPGA board. 
 This tutorial assumes using SD card to boot and program the FPGA.
 This tutorial assumes that Vivado 2017.1 and SDK 2018.2 have been installed. 
 \newpage
 
 \section{Getting Started}
 
+\newcommand{\rootdir}{[root-repo-dir]}
+
 \begin{enumerate}
 \item Clone the main repository using git command from github:\\
- {\tt git clone https://github.com/li3tuo4/fpga-zcu.git}\\
+ {\tt git clone https://github.com/li3tuo4/rc-fpga-zcu.git}\\
  Alternatively, you can directly download the zip file from github.
-\item Enter the {\tt fpga-zcu/zcu102} directory and use Makefile to initiate the submodules/sub-repositories:\\
+ Let's denote the root directory of the main repo as \texttt{\rootdir}.
+\item Enter the {\tt \rootdir/zcu102} directory and use Makefile to initiate the submodules/sub-repositories:\\
  {\tt make init-submodules}
- \item Enter {\tt fpga-zcu/rocket-chip} directory and follow README to install the rocket-chip dependencies (submodules). Make sure riscv-linux-gnu is installed when building compiler. This is required for making riscv-linux.
+ \item Enter {\tt \rootdir/rocket-chip} directory and follow README to install the rocket-chip dependencies (submodules). Make sure riscv-linux-gnu is installed when building compiler. This is required for making riscv-linux.
 \end{enumerate}
 
 \section{Hardware Generation}
 \begin{enumerate}
-\item Enter  {\tt fpga-zcu/zcu102} directory and use Makefile to compile chisel source code:\\
+\item Enter  {\tt \rootdir/zcu102} directory and use Makefile to compile chisel source code:\\
 {\tt make rocket}
 \item Implement and build bitstream using Makefile:\\
  {\tt make bitstream}
@@ -64,56 +67,70 @@ In this step, we will create the software stacks for ARM and RISC-V. The ARM ope
 \begin{enumerate}
 \item Install petalinux, which creates software stacks for ARM. Follow the ``Installation Steps'' on Page 11 in: \url{https://www.xilinx.com/support/documentation/sw_manuals/xilinx2017_1/ug1144-petalinux-tools-reference-guide.pdf}
 
-\item Download board support package (bsp) file of ZCU102 from: \url{https://www.xilinx.com/member/forms/download/xef.html?filename=xilinx-zcu102-v2017.1-final.bsp}. Xilinx account is required, which can be registered straightforwardly. Put  the downloaded file {\tt xilinx-zcu102-v2017.1-final.bsp} into {\tt zcu102/soft\_config} directory.
+\item Download board support package (bsp) file of ZCU102 from: \url{https://www.xilinx.com/member/forms/download/xef.html?filename=xilinx-zcu102-v2017.1-final.bsp}. Xilinx account is required, which can be registered straightforwardly. Put the downloaded file {\tt xilinx-zcu102-v2017.1-final.bsp} into {\tt \rootdir/zcu102/soft\_config} directory.
 
 
 \item Export {\tt PETALINUX} environment variable and set up petalinux by:\\
 {\tt export PETALINUX=/path/to/petalinux \&\& make pl\_setup}
 
-\item Enter {\tt fpga-zcu/zcu102}. Use Makefile to automatically create and build petalinux project for ARM Linux image:\\
+\item Enter {\tt \rootdir/zcu102}. Use Makefile to automatically create and build petalinux project for ARM Linux image:\\
 {\tt make kernel\_image}\\
-Makefile will automatically create a petalinux project named {\tt petalinux\_proj}, in {\tt fpga-zcu/zcu102}.
+Makefile will automatically create a petalinux project named {\tt petalinux\_proj}, in {\tt \rootdir/zcu102}.
 The {\tt BOOT.BIN} and {\tt image.ub} in {\tt petalinux\_proj/images/linux} are the image files created. {\tt initramfs.cpio.gz} is the root file system.
 
-\item Copy these three files to {\tt zcu102/fpga-images-zcu102} directory. Note this step will replace the initial image files in this directory. Then, use Makefile to open, modify, and close the root filesystem:\\
+\item Copy these three files to {\tt \rootdir/zcu102/fpga-images-zcu102} directory. Note this step will replace the initial image files in this directory. Note you can use Makefile to open, modify, and close the root filesystem:\\
 {\tt make rootfs-open}\\
+{\tt [modify]}\\
 {\tt make rootfs-close}
 \end{enumerate}
 
 \subsection{RISC-V}
 \begin{enumerate}
-\item Obtain freedom-u-sdk from \url{https://github.com/sifive/freedom-u-sdk} and follow README to set up. This tutorial uses {\tt linux\_u500vc707devkit\_confg} branch (commit {\tt db77bd7a8779d776d3f67b8a76ab5973e93604e6}).
+\item Make sure Xilinx SDK is installed and has been added to the PATH to successfully generate the binary. 
+Enter the zcu102 directory and use Makefile to create fesvr-zynq binary for ZCU102:\\
+{\tt cd \rootdir/zcu102}\\
+{\tt make fesvr-zynq}\\
+The target files including \texttt{fesvr-zynq} and \texttt{libfesvr.so} will be generated in \texttt{\rootdir/common/build}.
 
-\item Copy the configuration file from {\tt soft\_config} to the work directory of RISC-V Linux and in the work directory of RISC-V Linux execute build:\\
-{\tt cp /path/to/soft\_config/config\_freedom /path/to/freedom-u-sdk/work/linux/.config}\\
-{\tt ./build}\\
 
-In the latest version of freedom SDK, build is extracted into simple Makefile, in this case,
-type:\\ 
-{\tt make -jN ARCH=riscv CROSS\_COMPILE=riscv64-unknown-linux-gnu vmlinux}\\ 
-instead.
-The kernel image {\tt vmlinux} will be generated in this directory.
+\item Obtain freedom-u-sdk from \url{https://github.com/sifive/freedom-u-sdk}.
+Make sure the system environment is set up as specified by README of the repo. Note you might need to unset \texttt{RISCV} environment variable for building riscv-linux (you can set it again after build). This tutorial uses {\tt linux\_u500vc707devkit\_confg} branch (commit {\tt db77bd7a8779d776d3f67b8a76ab5973e93604e6}).
+
+\item Enter the freedom-u-sdk directory and initialize the repository:\\
+\texttt{cd /path/to/freedom-u-sdk}\\
+\texttt{git submodule update --recursive --init}
+
+\item Copy the configuration file from {\tt \rootdir/zcu102/soft\_config} to the freedom-u-sdk (optionally you can backup the default config file at first):
+\begin{lstlisting}
+cp /path/to/freedom-u-sdk/conf/linux_defconfig /path/to/freedom-u-sdk/conf/linux_defconfig_bak
+cp /path/to/soft_config/config_freedom /path/to/freedom-u-sdk/conf/linux_defconfig
+\end{lstlisting}
+
+\item In freedom-u-sdk root directory, make riscv-linux kernel:\\
+{\tt make vmlinux}\\
+The kernel image {\tt vmlinux} will be generated in \texttt{/path/to/freedom-u-sdk/work/linux}.
 
 \item Follow the riscv-tools README to create Berkeley boot loader (bbl) with RISC-V Linux included:\\
-{\tt cd <riscv-pk>/build\\
+{\tt cd \rootdir/rocket-chip/riscv-tools/riscv-pk/build\\
 rm -rf *\\
-../configure --prefix=\$RISCV --host=riscv64-unknown-linux-gnu --with-payload=<riscv-linux>/vmlinux\\
+../configure --prefix=\$RISCV --host=riscv64-unknown-linux-gnu --with-payload=/path/to/freedom-u-sdk/work/linux/vmlinux\\
 make\\
 make install}
 
-\item Make sure Xilinx SDK is installed and has been added to the PATH to successfully generate the binary. 
-Use Makefile to create fesvr-zynq binary for ZCU102:\\
-{\tt make fesvr-zynq}
+\item Put {\tt fesvr-zynq, libfesvr.so} and {\tt bbl} into the root filesystem along with the commands introduced in Step 5 in Section~\ref{sec-arm}.
+After you opened the initramfs (rootfs), copy the files into \texttt{/path/to/rootfs} (sudo probably is needed):
+\begin{lstlisting}
+cp /path/to/riscv-pk/build/bbl [root-repo-dir]/common/build/fesvr_zynq [root-repo-dir]/common/build/ /path/to/rootfs/home/root/
+\end{lstlisting}
+After you finish copying, close the rootfs.
 
-
-\item Put {\tt fesvr-zynq, libfesvr.so} and {\tt bbl} into the root filesystem by using the commands in Step 4 in Section~\ref{sec-arm}.
 \end{enumerate}
 
 \section{FPGA Board Setup and SD Card Preparation}
 \begin{enumerate}
 \item Prepare the board following Xilinx quick start guide in \url{https://www.xilinx.com/support/documentation/boards_and_kits/zcu102/xtp426-zcu102-quickstart.pdf} and Chapter 2: Board Setup and Configuration in Xilinx UG1182 in \url{https://www.xilinx.com/support/documentation/boards_and_kits/zcu102/ug1182-zcu102-eval-bd.pdf}. Note Switch SW6 must be configured to ``off, off, off, on'' for allowing SD card boot up.
-\item Prepare SD card following README in the sub-repository {\tt fpga-images-zcu102} in \url{https://github.com/li3tuo4/fpga-images-zcu102}.
-\item Enter {\tt /path/to/zcu102} directory and use Makefile to load SD card:\\
+\item Prepare SD card following README in the sub-repository {\tt \rootdir/zcu102/fpga-images-zcu102} in \url{https://github.com/li3tuo4/fpga-images-zcu102}.
+\item Enter {\tt \rootdir/zcu102} directory and use Makefile to load SD card:\\
 {\tt make load-sd}\\
 Now it's ready to run the system on FPGA.
 \end{enumerate}
