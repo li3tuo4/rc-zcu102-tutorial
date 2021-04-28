@@ -7,7 +7,7 @@
 \begin{document}
 
 \title{\vspace{-0.7in}\Large {\bf FPGA-ZCU Quick Start Tutorial} \\
-Document Version 2.0a
+Document Version 2.0b
   \vspace{-0.1in}}
 
 \author{Tuo Li, Sri Parameswaran\\
@@ -27,6 +27,7 @@ Document Version 2.0a
 This document will provide a step-by-step walkthrough with the (rc-)fpga-zcu (the ZCU102 port of Rocket-chip) project, towards running operating system on rocket-chip System-on-Chip (SoC) on ZCU102 FPGA board. 
 This tutorial assumes using SD card to boot and program the FPGA.
 This tutorial assumes that Vivado 2017.1 and SDK 2018.2 have been installed. 
+If you meet any problems, you might find the solution in Section~\ref{sec_errors}.
 \newpage
 
 \section{Getting Started}
@@ -67,7 +68,7 @@ In this step, we will create the software stacks for ARM and RISC-V. The ARM ope
 \begin{enumerate}
 \item Install petalinux, which creates software stacks for ARM. Follow the ``Installation Steps'' on Page 11 in: \url{https://www.xilinx.com/support/documentation/sw_manuals/xilinx2017_1/ug1144-petalinux-tools-reference-guide.pdf}
 
-\item Download board support package (bsp) file of ZCU102 from: \url{https://www.xilinx.com/member/forms/download/xef.html?filename=xilinx-zcu102-v2017.1-final.bsp}. Xilinx account is required, which can be registered straightforwardly. Put the downloaded file {\tt xilinx-zcu102-v2017.1-final.bsp} into {\tt \rootdir/zcu102/soft\_config} directory.
+\item Download board support package (bsp) file of ZCU102 from: \url{https://www.xilinx.com/member/forms/download/xef.html?filename=xilinx-zcu102-2017.1-final.bsp}. Xilinx account is required, which can be registered straightforwardly. Put the downloaded file {\tt xilinx-zcu102-2017.1-final.bsp} into {\tt \rootdir/zcu102/soft\_config} directory.
 
 
 \item Export {\tt PETALINUX} environment variable and set up petalinux by:\\
@@ -151,7 +152,7 @@ By default, the login username and password of RISC-V Linux are ``root'' and ``s
 
 Hint: If you have ethernet connection, which is already available in the default system build, using SCP to transfer files such as fesvr and bbl directly from Host PC to FPGA after ARM Linux login can save the time in opening, modifying and closing root filesystem.
 
-\section{Possible Build Errors and Solutions}
+\section{Possible Build Errors and Solutions}\label{sec_errors}
 \subsection{Error compiling sbt component  `compiler-interface'}
 Example error message after {\tt make rocket}:
 \begin{lstlisting}
