@@ -7,7 +7,7 @@
 \begin{document}
 
 \title{\vspace{-0.7in}\Large {\bf FPGA-ZCU Quick Start Tutorial} \\
-Document Version 2.0b
+Document Version 2.0c
   \vspace{-0.1in}}
 
 \author{Tuo Li, Sri Parameswaran\\
@@ -61,7 +61,11 @@ These files are used by software generation.
 \end{enumerate}
 
 \section{Software Generation}
-In this step, we will create the software stacks for ARM and RISC-V. The ARM operating system will run on the host (ARM cores), which calls RISC-V via frontend server (fesvr). Executing frontend server with Berkeley boot loader (bbl), built with RISC-V Linux kernel, on ARM, will boot up RISC-V core to run RISC-V Linux operating system.  
+In this step, we will create the software stacks for ARM and RISC-V. The ARM operating system will run on the host (ARM cores), which calls RISC-V via frontend server (fesvr). 
+Executing frontend server with Berkeley boot loader (bbl), built with RISC-V Linux kernel, on ARM, will boot up RISC-V core to run RISC-V Linux operating system.  
+
+NB!
+If you only want to use riscv-pk (a lightweight proxy kernel) with fesvr, Step 1 to 5 in Section~\ref{sec:riscvsw} can be ignored. And, in Step 6 and 7, make and put pk into rootfs, instead of bbl. 
 
 \subsection{ARM}\label{sec-arm}
 
@@ -85,7 +89,7 @@ The {\tt BOOT.BIN} and {\tt image.ub} in {\tt petalinux\_proj/images/linux} are 
 {\tt make rootfs-close}
 \end{enumerate}
 
-\subsection{RISC-V}
+\subsection{RISC-V}\label{sec:riscvsw}
 \begin{enumerate}
 \item Make sure Xilinx SDK is installed and has been added to the PATH to successfully generate the binary. 
 Enter the zcu102 directory and use Makefile to create fesvr-zynq binary for ZCU102:\\
@@ -130,7 +134,7 @@ After you finish copying, close the rootfs.
 \section{FPGA Board Setup and SD Card Preparation}
 \begin{enumerate}
 \item Prepare the board following Xilinx quick start guide in \url{https://www.xilinx.com/support/documentation/boards_and_kits/zcu102/xtp426-zcu102-quickstart.pdf} and Chapter 2: Board Setup and Configuration in Xilinx UG1182 in \url{https://www.xilinx.com/support/documentation/boards_and_kits/zcu102/ug1182-zcu102-eval-bd.pdf}. Note Switch SW6 must be configured to ``off, off, off, on'' for allowing SD card boot up.
-\item Prepare SD card following README in the sub-repository {\tt \rootdir/zcu102/fpga-images-zcu102} in \url{https://github.com/li3tuo4/fpga-images-zcu102}.
+\item Prepare SD card following README in the sub-repository {\tt \rootdir/zcu102/fpga-images-zcu102} in \url{https://github.com/li3tuo4/fpga-images-zcu}.
 \item Enter {\tt \rootdir/zcu102} directory and use Makefile to load SD card:\\
 {\tt make load-sd}\\
 Now it's ready to run the system on FPGA.
